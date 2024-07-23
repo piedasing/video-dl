@@ -3,6 +3,8 @@
     "private": false,
     "version": "1.0.1",
     "type": "module",
+    "main": "dist/video-dl.cjs",
+    "module": "dist/video-dl.js",
     "files": [
         "dist"
     ],
@@ -19,8 +21,9 @@
         ".": {
             "import": {
                 "types": "./dist/types/library.d.ts",
-                "default": "./dist/video-dl.es.js"
-            }
+                "default": "./dist/video-dl.js"
+            },
+            "require": "./dist/video-dl.cjs"
         }
     },
     "scripts": {

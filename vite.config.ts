@@ -19,8 +19,8 @@ export default defineConfig({
         lib: {
             entry: path.resolve(__dirname, 'src/library.ts'),
             name: '@pieda/video-dl',
-            fileName: (format, entry) => `video-dl.${format}.js`,
-            formats: ['es'],
+            // fileName: (format, entry) => `video-dl.${format}.js`,
+            formats: ['es', 'cjs'],
         },
     },
     plugins: [],
