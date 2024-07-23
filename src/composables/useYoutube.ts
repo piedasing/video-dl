@@ -1,11 +1,17 @@
 import { importModule } from '../_func';
 
+import { useLogger } from './useLogger';
+
 type TUseYoutube = {
     videoId: string;
     dest: string;
+    debug?: boolean;
 };
 
-export const useYoutube = async ({ videoId, dest }: TUseYoutube): Promise<void> => {
+export const useYoutube = async ({ videoId, dest, debug = false }: TUseYoutube): Promise<void> => {
+    const logger = useLogger(debug);
+    logger.log(`Downloading video: ${videoId} to: ${dest}`);
+
     const url = `https://www.youtube.com/watch?v=${videoId}`;
 
     const fs: any = await importModule('fs');
@@ -19,6 +25,7 @@ export const useYoutube = async ({ videoId, dest }: TUseYoutube): Promise<void> 
     return new Promise((resolve, reject) => {
         const stream = ytdl(url).pipe(fs.createWriteStream(dest));
         stream.on('finish', () => {
+            logger.log(`Downloading finished.`);
             resolve();
         });
     });
