@@ -8,7 +8,11 @@ type TUseVimeo = {
     debug?: boolean;
 };
 
-export const useVimeo = async ({ videoId, dest, debug = false }: TUseVimeo): Promise<void> => {
+export const useVimeo = async ({
+    videoId,
+    dest,
+    debug = false,
+}: TUseVimeo): Promise<[Error | null, boolean | null]> => {
     const logger = useLogger(debug);
     logger.log(`Downloading video: ${videoId} to: ${dest}`);
 
@@ -47,14 +51,17 @@ export const useVimeo = async ({ videoId, dest, debug = false }: TUseVimeo): Pro
     }
 
     return new Promise(async (resolve, reject) => {
-        const jwt = await getViewer();
-        logger.log(`取得 jwt ${jwt}`);
-        const videoUrl = await getDownloadLink(videoId, jwt);
-        logger.log(`取得 videoUrl ${videoUrl}`);
-        await downloadFileFromUrl(videoUrl, dest);
-        logger.log(`下載完成 ${dest}`);
+        try {
+            const jwt = await getViewer();
+            logger.log(`取得 jwt ${jwt}`);
+            const videoUrl = await getDownloadLink(videoId, jwt);
+            logger.log(`取得 videoUrl ${videoUrl}`);
+            await downloadFileFromUrl(videoUrl, dest);
+            logger.log(`下載完成 ${dest}`);
 
-        resolve();
-        return;
+            resolve([null, true]);
+        } catch (error) {
+            resolve([error as Error, null]);
+        }
     });
 };

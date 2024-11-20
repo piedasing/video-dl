@@ -8,7 +8,11 @@ type TUseYoutube = {
     debug?: boolean;
 };
 
-export const useYoutube = async ({ videoId, dest, debug = false }: TUseYoutube): Promise<void> => {
+export const useYoutube = async ({
+    videoId,
+    dest,
+    debug = false,
+}: TUseYoutube): Promise<[Error | null, boolean | null]> => {
     const logger = useLogger(debug);
     logger.log(`Downloading video: ${videoId} to: ${dest}`);
 
@@ -23,10 +27,14 @@ export const useYoutube = async ({ videoId, dest, debug = false }: TUseYoutube):
     }
 
     return new Promise((resolve, reject) => {
-        const stream = ytdl(url).pipe(fs.createWriteStream(dest));
-        stream.on('finish', () => {
-            logger.log(`Downloading finished.`);
-            resolve();
-        });
+        try {
+            const stream = ytdl(url).pipe(fs.createWriteStream(dest));
+            stream.on('finish', () => {
+                logger.log(`Downloading finished.`);
+                resolve([null, true]);
+            });
+        } catch (error) {
+            resolve([error as Error, null]);
+        }
     });
 };
