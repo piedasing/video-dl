@@ -33,6 +33,9 @@ export const useYoutube = async ({
                 logger.log(`Downloading finished.`);
                 resolve([null, true]);
             });
+            stream.on('error', (error: any) => {
+                throw error;
+            });
         } catch (error) {
             resolve([error as Error, null]);
         }
