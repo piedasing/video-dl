@@ -28,15 +28,18 @@ export const useYoutube = async ({
 
     return new Promise((resolve, reject) => {
         try {
-            const stream = ytdl(url).pipe(fs.createWriteStream(dest));
+            const stream = ytdl(url)
+                .on('error', (error: any) => {
+                    logger.error(error);
+                    resolve([error as Error, null]);
+                })
+                .pipe(fs.createWriteStream(dest));
             stream.on('finish', () => {
                 logger.log(`Downloading finished.`);
                 resolve([null, true]);
             });
-            stream.on('error', (error: any) => {
-                throw error;
-            });
         } catch (error) {
+            console.log('error');
             resolve([error as Error, null]);
         }
     });
