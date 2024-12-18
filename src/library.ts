@@ -1,1 +1,1 @@
-export { useDownloader, useYoutube, useFacebook, useVimeo } from './composables';
+export { useDownloader, useYoutube, useFacebook, useVimeo, useInstagram } from './composables';

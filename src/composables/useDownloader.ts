@@ -1,12 +1,17 @@
 import { useYoutube } from './useYoutube';
 import { useFacebook } from './useFacebook';
 import { useVimeo } from './useVimeo';
+import { useInstagram } from './useInstagram';
 
 type TUseDownloader = {
-    type: 'youtube' | 'facebook' | 'vimeo';
+    type: 'youtube' | 'facebook' | 'vimeo' | 'instagram';
 };
 
-type TUseDownloaderResponse = typeof useYoutube | typeof useFacebook | typeof useVimeo;
+type TUseDownloaderResponse =
+    | typeof useYoutube
+    | typeof useFacebook
+    | typeof useVimeo
+    | typeof useInstagram;
 
 export const useDownloader = ({ type }: TUseDownloader): TUseDownloaderResponse => {
     switch (type) {
@@ -18,6 +23,9 @@ export const useDownloader = ({ type }: TUseDownloader): TUseDownloaderResponse 
         }
         case 'vimeo': {
             return useVimeo;
+        }
+        case 'instagram': {
+            return useInstagram;
         }
         default: {
             throw new Error(`Invalid video type: ${type}`);
