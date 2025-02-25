@@ -5,18 +5,20 @@ type TUseInstagram = {
     videoId: string;
     dest: string;
     debug?: boolean;
+    headless?: boolean;
 };
 
 export const useInstagram = async ({
     videoId,
     dest,
     debug = false,
+    headless = true,
 }: TUseInstagram): Promise<[Error | null, boolean | null]> => {
     try {
         const logger = useLogger(debug);
         logger.log(`Downloading video: ${videoId} to: ${dest}`);
 
-        const url = `https://www.instagram.com/share/${videoId}/`;
+        const url = `https://www.instagram.com/reel/${videoId}/`;
 
         const fs: any = await importModule('fs');
         const path: any = await importModule('path');
@@ -27,7 +29,11 @@ export const useInstagram = async ({
             logger.log(`建立 ${path.dirname(dest)}`);
         }
 
-        const browser = await puppeteer.launch();
+        const config: any = {};
+        if (!headless) {
+            config['headless'] = false;
+        }
+        const browser = await puppeteer.launch(config);
         logger.log(`啟動 puppeteer`);
 
         const page = await browser.newPage();

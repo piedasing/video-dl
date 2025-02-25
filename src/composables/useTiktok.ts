@@ -5,12 +5,14 @@ type TUseTiktok = {
     videoLink: string;
     dest: string;
     debug?: boolean;
+    headless?: boolean;
 };
 
 export const useTiktok = async ({
     videoLink,
     dest,
     debug = false,
+    headless = true,
 }: TUseTiktok): Promise<[Error | null, boolean | null]> => {
     try {
         const logger = useLogger(debug);
@@ -27,7 +29,11 @@ export const useTiktok = async ({
             logger.log(`建立 ${path.dirname(dest)}`);
         }
 
-        const browser = await puppeteer.launch();
+        const config: any = {};
+        if (!headless) {
+            config['headless'] = false;
+        }
+        const browser = await puppeteer.launch(config);
         logger.log(`啟動 puppeteer`);
 
         const page = await browser.newPage();
