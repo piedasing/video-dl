@@ -27,7 +27,7 @@ export const useTiktok = async ({
             logger.log(`建立 ${path.dirname(dest)}`);
         }
 
-        const browser = await puppeteer.launch({ headless: false });
+        const browser = await puppeteer.launch();
         logger.log(`啟動 puppeteer`);
 
         const page = await browser.newPage();
