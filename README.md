@@ -1,8 +1,12 @@
 # @pieda/video-dl
 
+## 安裝
+
 ```bash
 npm install @pieda/video-dl
 ```
+
+## 使用
 
 ```js
 import { useDownloader } from '@pieda/video-dl';

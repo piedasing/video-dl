@@ -37,7 +37,7 @@
         "version:patch": "npm version patch"
     },
     "dependencies": {
-        "@distube/ytdl-core": "^4.15.1",
+        "@distube/ytdl-core": "^4.15.8",
         "axios": "^1.7.2",
         "puppeteer": "^22.13.1"
     },
