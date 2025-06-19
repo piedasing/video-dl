@@ -41,13 +41,15 @@ export const useFacebook = async ({
             `'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1'`,
         );
         logger.log(`開新分頁`);
-
-        await page.goto(url, {
-            waitUntil: 'networkidle0',
-        });
         logger.log(`前往 ${url}`);
 
-        await page.waitForSelector('video');
+        await Promise.race([
+            page.goto(url, {
+                waitUntil: 'networkidle0',
+            }),
+            page.waitForSelector('video'),
+        ]);
+
         logger.log(`找到 video 元素`);
         const videoUrl = await page.$eval('video', (el: HTMLElement) => el.getAttribute('src'));
         logger.log(`取得 video url: ${videoUrl}`);

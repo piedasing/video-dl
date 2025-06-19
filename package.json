@@ -37,9 +37,9 @@
         "version:patch": "npm version patch"
     },
     "dependencies": {
-        "@distube/ytdl-core": "^4.16.8",
-        "axios": "^1.7.2",
-        "puppeteer": "^22.13.1"
+        "axios": "^1.10.0",
+        "puppeteer": "^22.13.1",
+        "youtubei.js": "^14.0.0"
     },
     "devDependencies": {
         "fs": "^0.0.1-security",
@@ -49,8 +49,8 @@
         "vue-tsc": "^1.4.2"
     },
     "peerDependencies": {
-        "@distube/ytdl-core": "^4.16.8",
-        "axios": "^1.7.2",
-        "puppeteer": "^22.13.1"
+        "axios": "^1.10.0",
+        "puppeteer": "^22.13.1",
+        "youtubei.js": "^14.0.0"
     }
 }
