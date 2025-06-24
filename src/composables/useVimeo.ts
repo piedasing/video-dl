@@ -2,6 +2,7 @@ import { importModule, downloadFileFromUrl } from '../_func';
 import { useLogger } from './useLogger';
 
 type TUseVimeo = {
+    ytdlpPath: string;
     videoId: string;
     dest: string;
     downloadBtnSelector?: string;
@@ -9,6 +10,7 @@ type TUseVimeo = {
 };
 
 export const useVimeo = async ({
+    ytdlpPath,
     videoId,
     dest,
     debug = false,
@@ -18,31 +20,21 @@ export const useVimeo = async ({
 
     const fs: any = await importModule('fs');
     const path: any = await importModule('path');
-    const axios: any = await importModule('axios');
+    const { exec }: any = await importModule('child_process');
 
-    const getViewer = async (): Promise<string> => {
-        const res = await axios.get('https://vimeo.com/_next/viewer', {
-            responseType: 'json',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-            },
+    const getDownloadLink = (videoId = ''): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const cmd = `${ytdlpPath} -f b -g https://vimeo.com/${videoId}`;
+            console.log(`執行命令: ${cmd}`);
+            exec(cmd, (error: Error, stdout: string, stderr: string) => {
+                logger.log(`yt-dlp stdout: ${stdout}`);
+                if (!stdout.includes('https://')) {
+                    resolve('');
+                    return;
+                }
+                resolve(stdout);
+            });
         });
-        const { jwt } = res.data;
-        return jwt || '';
-    };
-
-    const getDownloadLink = async (videoId = '', accessToken = ''): Promise<string> => {
-        const res = await axios.get(`https://api.vimeo.com/videos/${videoId}?&fields=download`, {
-            responseType: 'json',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                Authorization: `jwt ${accessToken}`,
-            },
-        });
-        const { download = [] } = res.data;
-        const config = download[0] || null;
-
-        return config?.link || '';
     };
 
     if (!fs.existsSync(path.dirname(dest))) {
@@ -52,15 +44,20 @@ export const useVimeo = async ({
 
     return new Promise(async (resolve, reject) => {
         try {
-            const jwt = await getViewer();
-            logger.log(`取得 jwt ${jwt}`);
-            const videoUrl = await getDownloadLink(videoId, jwt);
+            const videoUrl = await getDownloadLink(videoId);
+            if (!videoUrl) {
+                throw new Error(`無法取得 videoUrl`);
+            }
             logger.log(`取得 videoUrl ${videoUrl}`);
-            await downloadFileFromUrl(videoUrl, dest);
+            await downloadFileFromUrl(videoUrl, dest).catch((error: Error) => {
+                logger.error(`下載失敗: ${error.message}`);
+                throw error;
+            });
             logger.log(`下載完成 ${dest}`);
 
             resolve([null, true]);
-        } catch (error) {
+        } catch (error: any) {
+            logger.error(`下載失敗: ${error.message}`);
             resolve([error as Error, null]);
         }
     });

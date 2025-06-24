@@ -1,14 +1,16 @@
-import { importModule } from '../_func';
+import { importModule, downloadFileFromUrl } from '../_func';
 
 import { useLogger } from './useLogger';
 
 type TUseYoutube = {
+    ytdlpPath: string;
     videoId: string;
     dest: string;
     debug?: boolean;
 };
 
 export const useYoutube = async ({
+    ytdlpPath,
     videoId,
     dest,
     debug = false,
@@ -20,47 +22,45 @@ export const useYoutube = async ({
 
     const fs: any = await importModule('fs');
     const path: any = await importModule('path');
-    const Innertube: any = await importModule('youtubei.js');
+    const { exec }: any = await importModule('child_process');
+
+    const getDownloadLink = (videoId = ''): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const cmd = `${ytdlpPath} -f b -g https://www.youtube.com/watch?v=${videoId}`;
+            logger.log(`[yt-dlp] 執行命令: ${cmd}`);
+            exec(cmd, (error: Error, stdout: string, stderr: string) => {
+                logger.log(`[yt-dlp] stdout: ${stdout}`);
+                if (!stdout.includes('https://')) {
+                    resolve('');
+                    return;
+                }
+                resolve(stdout);
+            });
+        });
+    };
 
     if (!fs.existsSync(path.dirname(dest))) {
         fs.mkdirSync(path.dirname(dest), { recursive: true }, 777);
+        logger.log(`建立 ${path.dirname(dest)}`);
     }
 
-    const ytdl = await Innertube.create({
-        cache: false,
-        generate_session_locally: true,
-    });
-
-    try {
-        const stream = await ytdl.download(videoId, {
-            type: 'video+audio',
-            quality: 'best',
-            format: 'mp4',
-            client: 'WEB',
-        });
-        const file = fs.createWriteStream(dest);
-        for await (const chunk of streamToIterable(stream)) {
-            file.write(chunk);
-        }
-
-        return [null, true];
-    } catch (error) {
-        console.log('error', error);
-        return [error as Error, null];
-    }
-};
-
-async function* streamToIterable(stream: ReadableStream<Uint8Array>) {
-    const reader = stream.getReader();
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                return;
+    return new Promise(async (resolve, reject) => {
+        try {
+            const videoUrl = await getDownloadLink(videoId);
+            if (!videoUrl) {
+                throw new Error(`無法取得 videoUrl`);
             }
-            yield value;
+            logger.log(`取得 videoUrl ${videoUrl}`);
+            await downloadFileFromUrl(videoUrl, dest).catch((error: Error) => {
+                logger.error(`下載失敗: ${error.message}`);
+                throw error;
+            });
+            logger.log(`下載完成 ${dest}`);
+
+            resolve([null, true]);
+        } catch (error: any) {
+            logger.error(`下載失敗: ${error.message}`);
+            resolve([error as Error, null]);
         }
-    } finally {
-        reader.releaseLock();
-    }
-}
+    });
+};
