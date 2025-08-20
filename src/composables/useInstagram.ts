@@ -2,66 +2,63 @@ import { importModule, downloadFileFromUrl } from '../_func';
 import { useLogger } from './useLogger';
 
 type TUseInstagram = {
+    ytdlpPath: string;
     videoId: string;
     dest: string;
     debug?: boolean;
-    headless?: boolean;
 };
 
 export const useInstagram = async ({
+    ytdlpPath,
     videoId,
     dest,
     debug = false,
-    headless = true,
 }: TUseInstagram): Promise<[Error | null, boolean | null]> => {
-    try {
-        const logger = useLogger(debug);
-        logger.log(`Downloading video: ${videoId} to: ${dest}`);
+    const logger = useLogger(debug);
+    logger.log(`Downloading video: ${videoId} to: ${dest}`);
 
-        const url = `https://www.instagram.com/reel/${videoId}/`;
+    const fs: any = await importModule('fs');
+    const path: any = await importModule('path');
+    const { exec }: any = await importModule('child_process');
 
-        const fs: any = await importModule('fs');
-        const path: any = await importModule('path');
-        const puppeteer: any = await importModule('puppeteer');
+    const getDownloadLink = (videoId = ''): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const url = `https://www.instagram.com/reel/${videoId}/`;
+            const cmd = `${ytdlpPath} -f b -g ${url}`;
+            console.log(`執行命令: ${cmd}`);
+            exec(cmd, (error: Error, stdout: string, stderr: string) => {
+                logger.log(`yt-dlp stdout: ${stdout}`);
+                if (!stdout.includes('https://')) {
+                    resolve('');
+                    return;
+                }
+                resolve(stdout);
+            });
+        });
+    };
 
-        if (!fs.existsSync(path.dirname(dest))) {
-            fs.mkdirSync(path.dirname(dest), { recursive: true }, 777);
-            logger.log(`建立 ${path.dirname(dest)}`);
-        }
-
-        const config: any = {};
-        if (!headless) {
-            config['headless'] = false;
-        }
-        const browser = await puppeteer.launch(config);
-        logger.log(`啟動 puppeteer`);
-
-        const page = await browser.newPage();
-        await page.setUserAgent(
-            `'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1'`,
-        );
-        logger.log(`開新分頁`);
-        logger.log(`前往 ${url}`);
-
-        await Promise.race([
-            page.goto(url, {
-                waitUntil: 'networkidle0',
-            }),
-            page.waitForSelector('video'),
-        ]);
-
-        logger.log(`找到 video 元素`);
-        const videoUrl = await page.$eval('video', (el: HTMLElement) => el.getAttribute('src'));
-        logger.log(`取得 video url: ${videoUrl}`);
-
-        await browser.close();
-        logger.log(`關閉 puppeteer`);
-
-        await downloadFileFromUrl(videoUrl, dest);
-        logger.log(`下載完成 ${videoUrl}`);
-
-        return [null, true];
-    } catch (error) {
-        return [error as Error, null];
+    if (!fs.existsSync(path.dirname(dest))) {
+        fs.mkdirSync(path.dirname(dest), { recursive: true }, 777);
+        logger.log(`建立 ${path.dirname(dest)}`);
     }
+
+    return new Promise(async (resolve, reject) => {
+        try {
+            const videoUrl = await getDownloadLink(videoId);
+            if (!videoUrl) {
+                throw new Error(`無法取得 videoUrl`);
+            }
+            logger.log(`取得 videoUrl ${videoUrl}`);
+            await downloadFileFromUrl(videoUrl, dest).catch((error: Error) => {
+                logger.error(`下載失敗: ${error.message}`);
+                throw error;
+            });
+            logger.log(`下載完成 ${dest}`);
+
+            resolve([null, true]);
+        } catch (error: any) {
+            logger.error(`下載失敗: ${error.message}`);
+            resolve([error as Error, null]);
+        }
+    });
 };
