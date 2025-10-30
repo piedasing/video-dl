@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
-
 import { importModule } from '../_func';
 
 import { useLogger } from './useLogger';
@@ -32,11 +30,9 @@ export const useYtdlp = async ({
     const path: any = await importModule('path');
     const { exec, execSync }: any = await importModule('child_process');
 
-    const ytdlpDir = path.join(tempDir, uuidv4());
-
     const downloadFile = (): Promise<void> => {
         return new Promise((resolve, reject) => {
-            const cmd = `${ytdlpPath} -f mergeall --audio-multistreams --video-multistreams ${videoUrl} --downloader ffmpeg -o "${ytdlpDir}/%(id)s.%(ext)s" --merge-output-format mp4`;
+            const cmd = `${ytdlpPath} -f mergeall --audio-multistreams --video-multistreams ${videoUrl} --downloader ffmpeg -o "${tempDir}/%(id)s.%(ext)s" --merge-output-format mp4`;
             logger.log(`[yt-dlp] 執行命令: ${cmd}`);
             exec(cmd, (error: Error, stdout: string, stderr: string) => {
                 logger.log(`[yt-dlp] stdout: ${stdout}`);
@@ -59,9 +55,9 @@ export const useYtdlp = async ({
             await downloadFile();
 
             let success = false;
-            const files = fs.readdirSync(ytdlpDir);
+            const files = fs.readdirSync(tempDir);
             for (const file of files) {
-                const fullPath = path.join(ytdlpDir, file);
+                const fullPath = path.join(tempDir, file);
                 const cmd = `${ffmpegConfig.ffmpegProbePath} -v error -show_entries stream=codec_type -of csv=p=0 "${fullPath}"`;
                 const info = execSync(cmd).toString('utf-8');
                 const hasVideo = info.includes("video");
