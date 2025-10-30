@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 import { importModule } from '../_func';
 
@@ -32,7 +32,7 @@ export const useYtdlp = async ({
     const path: any = await importModule('path');
     const { exec, execSync }: any = await importModule('child_process');
 
-    const ytdlpDir = path.join(tempDir, uuid());
+    const ytdlpDir = path.join(tempDir, uuidv4());
 
     const downloadFile = (): Promise<void> => {
         return new Promise((resolve, reject) => {

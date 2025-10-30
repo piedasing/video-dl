@@ -10,6 +10,7 @@
             "@/*": ["./src/*"]
         },
         "typeRoots": ["@types", "./node_modules/@types"],
+        "types": ["node"],
         "declaration": true,
         "declarationDir": "dist/types",
 
