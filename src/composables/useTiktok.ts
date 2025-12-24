@@ -43,12 +43,11 @@ export const useTiktok = async ({
         logger.log(`開新分頁`);
         logger.log(`前往 ${url}`);
 
-        await Promise.race([
-            page.goto(url, {
-                waitUntil: 'networkidle0',
-            }),
-            page.waitForSelector('video'),
-        ]);
+        await page.goto(url, {
+            waitUntil: 'networkidle2',
+        });
+
+        await page.waitForSelector('video');
 
         logger.log(`找到 video 元素`);
 

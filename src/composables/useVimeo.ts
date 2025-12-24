@@ -8,6 +8,7 @@ type TUseVimeo = {
     dest: string;
     tempDir: string;
     ffmpegConfig: {
+        ffmpegDir: string;
         ffmpegPath: string;
         ffmpegProbePath: string;
         ffmpegPlayPath: string;
@@ -27,10 +28,17 @@ export const useVimeo = async ({
 
     const videoUrl = `https://vimeo.com/${videoId}`;
 
+    const cmdArr = [
+        `${ytdlpPath}`,
+        '-f "bv*[vcodec^=avc1][acodec^=mp4a][height<=1080]/ba/b"',
+        '--js-runtimes node',
+        `${videoUrl}`,
+        `-o "${tempDir}/%(id)s.%(ext)s"`,
+    ];
+
     return useYtdlp({
         debug,
-        ytdlpPath,
-        videoUrl,
+        command: cmdArr.join(' '),
         dest,
         tempDir,
         ffmpegConfig,

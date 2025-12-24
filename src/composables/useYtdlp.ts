@@ -4,11 +4,11 @@ import { useLogger } from './useLogger';
 
 type TUseYtdlp = {
     debug?: boolean;
-    ytdlpPath: string;
-    videoUrl: string;
+    command: string;
     dest: string;
     tempDir: string;
     ffmpegConfig: {
+        ffmpegDir: string;
         ffmpegPath: string;
         ffmpegProbePath: string;
         ffmpegPlayPath: string;
@@ -17,14 +17,12 @@ type TUseYtdlp = {
 
 export const useYtdlp = async ({
     debug = false,
-    ytdlpPath,
-    videoUrl,
+    command,
     dest,
     tempDir,
     ffmpegConfig,
 }: TUseYtdlp): Promise<[Error | null, boolean | null]> => {
     const logger = useLogger(debug);
-    logger.log(`Downloading video: ${videoUrl} to: ${dest}`);
 
     const fs: any = await importModule('fs');
     const path: any = await importModule('path');
@@ -32,9 +30,9 @@ export const useYtdlp = async ({
 
     const downloadFile = (): Promise<void> => {
         return new Promise((resolve, reject) => {
-            const cmd = `${ytdlpPath} -f mergeall --audio-multistreams --video-multistreams ${videoUrl} --downloader ffmpeg -o "${tempDir}/%(id)s.%(ext)s" --merge-output-format mp4`;
-            logger.log(`[yt-dlp] 執行命令: ${cmd}`);
-            exec(cmd, (error: Error, stdout: string, stderr: string) => {
+            logger.log(`[yt-dlp] 執行命令: ${command}`);
+
+            exec(command, (error: Error, stdout: string, stderr: string) => {
                 logger.log(`[yt-dlp] stdout: ${stdout}`);
                 if (error) {
                     reject(error);
@@ -60,8 +58,8 @@ export const useYtdlp = async ({
                 const fullPath = path.join(tempDir, file);
                 const cmd = `${ffmpegConfig.ffmpegProbePath} -v error -show_entries stream=codec_type -of csv=p=0 "${fullPath}"`;
                 const info = execSync(cmd).toString('utf-8');
-                const hasVideo = info.includes("video");
-                const hasAudio = info.includes("audio");
+                const hasVideo = info.includes('video');
+                const hasAudio = info.includes('audio');
                 if (hasVideo && hasAudio) {
                     success = true;
                     fs.copyFileSync(fullPath, dest);
